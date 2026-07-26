@@ -1,0 +1,17 @@
+# 3D 描画（viz/）に必要なもの。
+#   python3 -m venv .venv
+#   .venv/bin/pip install -r requirements.txt
+#
+# 画面のない環境で描くので、vtk は OSMesa 経由のソフトウェア OpenGL で動く。
+# X サーバも xvfb も要らない（Plotter(off_screen=True) がそのまま通る）。
+pyvista==0.48.4
+vtk==9.6.2
+numpy==2.5.1
+
+# 画像の切り出し・貼り合わせ・GIF（compose.py / make_gif.py）
+pillow==12.3.0
+
+# 2D パネル（panels.py）。ボトル断面・カム線図・波形はこれで描く。
+# viz/animate.py は --camera に 2D パネルの名前が入ると panels を読むので、
+# これが無いと README のいちばん最初の例（--camera iso,sensors）が動かない。
+matplotlib==3.11.1

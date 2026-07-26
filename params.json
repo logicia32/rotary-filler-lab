@@ -1,0 +1,274 @@
+{
+  "_note": "外から決まる仕様だけを置いた。実機の実測値ではない。出所は source 欄に書く。値の性格を _grade で示す: derived=幾何や物理から一意に出る / catalog=公開カタログの式や表から取れる / assumed=仮置き（根拠なし・記事では仮定と明記する）",
+  "_revision": "3. 機構をサーボ直結の割出しから、カム式インデックスユニット＋誘導ギヤモータに置き換えた。実機調査と5系統のレビューで出た乖離のうち、機械側を一括で修正している。慣性の係数抜け(1/4mr2 -> 1/2mr2)、割付角180度、毎分20本、テーブル板t8、単ノズルの工程配置、軸受故障のモータ側への移設を含む。センサの取り付け方は未決で、sensors ブロックは前版のまま暫定。",
+
+  "machine": {
+    "type": "intermittent_rotary_indexing",
+    "throughput_bpm": 20.0,
+    "_type_note": "間欠ロータリー（割出し式）。ノズルは世界座標に固定され、テーブルが止まっている間に充填する。連続ロータリー（ノズルがテーブルと一緒に回りロータリージョイントで液を送る）とは別物で、故障モードもタイムチャートも共有しない。",
+    "source": "毎分20本は、停留時間に充填時間と弁の応答が余裕を持って収まる点から決めた。市場の小型機の実力値の範囲内"
+  },
+
+  "bottle": {
+    "inner_diameter_mm": 65.0,
+    "body_height_mm": 150.0,
+    "shoulder_height_mm": 25.0,
+    "neck_diameter_mm": 28.0,
+    "neck_height_mm": 20.0,
+    "wall_thickness_mm": 1.5,
+    "empty_mass_kg": 0.025,
+    "_grade": "derived",
+    "source": "内径65mm・胴高150mmの円筒で、縁までの容積は498mL。これを公称500mLのボトルとみなす。肩と首は外形のみで、液は胴の中だけを考える"
+  },
+
+  "liquid": {
+    "name": "water",
+    "density_kg_m3": 1000.0,
+    "kinematic_viscosity_m2_s": 1.0e-6,
+    "slosh_damping_ratio": 0.005,
+    "_grade": "catalog",
+    "source": "密度と動粘度は水の物性値。減衰比は円筒容器の相関式（Mikishev-Dorozhkin 0.00584 / Stephens 0.00613）に対し安全側に 0.005 を採用"
+  },
+
+  "table": {
+    "pitch_circle_diameter_mm": 450.0,
+    "stations": 8,
+    "index_angle_deg": 45.0,
+    "plate_diameter_mm": 560.0,
+    "plate_thickness_mm": 8.0,
+    "plate_density_kg_m3": 7900.0,
+    "plate_mass_kg": 15.566,
+    "bare_inertia_kg_m2": 0.6102,
+    "_inertia_note": "回転軸まわりの極慣性 J = (1/2) m r^2 = 0.5 * 15.566 * 0.28^2。前版の 0.45 は直径まわりの (1/4) m r^2 を使っていた係数の誤り。板厚は t12 から t8 に落とし、カム素ユニットの許容慣性に収める側へ寄せた。",
+    "_grade": "derived",
+    "source": "ステーション間隔 = ピッチ円周/8 = 176.7mm はボトル外径68mmの2.6倍で、カタログの選定例（2.6倍前後）と一致する。慣性はステンレス円板として算出"
+  },
+
+  "stations": {
+    "_note": "世界角。テーブルは +45deg/割出し で回る。1本のボトルは 315deg で入り、次の停留で 0deg の単ノズル下に来て充填され、そこから5割出しかけて 225deg へ運ばれて出る。滞留は合計6割出し=18秒。",
+    "infeed_deg": 315.0,
+    "fill_deg": 0.0,
+    "discharge_deg": 225.0,
+    "_steady_state_note": "定常状態は 満量5本 + 空瓶1本 + 空ホルダ2つ。315に供給されたばかりの空瓶、0〜180が満量5本、225は排出済みで空、270も空のまま回る。負荷慣性 J_load = 0.6102 + 2.150*0.225^2 = 0.71904 kg m^2、テーブル軸ピークトルク 1.3875 N m。",
+    "_free_note": "45/90/135/180deg の4ステーションは空き。実機ではキャップ供給・打栓・液面検査・重量検査などが載るが、本モデルでは質量を持たない通過工程として扱う。この割り切りは記事に明記する。",
+    "_fix_note": "前版は供給と排出を同じ 180deg に置いていた。同じポケットで同じ瞬間に抜いて入れるのは幾何的に不可能。さらに、供給と排出のスターホイール(中心半径337.5・ピッチ円半径112.5)を1ステーション(45deg)しか離さないと、両方の星車が抱えるボトルどうしが当たる（ピッチ円の隙間 33.3mm に対しボトル外径 68mm）。逃げ10mmを見ると 53.3deg 以上離す必要があり、ステーション間隔45degでは2ステーションが最小。だから排出は225deg。実機で供給と排出が離れているのはこの理由。",
+    "_grade": "derived",
+    "source": "単ノズル1点固定という前提から、供給・充填・排出の3点だけを実体のある工程として置いた"
+  },
+
+  "indexer": {
+    "type": "cam_index_unit_bare",
+    "_type_note": "素ユニット（モータ・減速機を含まないカム本体）。入力軸1回転でテーブルが1ステーション進む。",
+    "index_angle_input_deg": 180.0,
+    "dwell_angle_input_deg": 180.0,
+    "cam_curve": "modified_sine",
+    "curve_Ca": 5.528,
+    "curve_Cv": 1.7596,
+    "_curve_note": "変形正弦(MS)の無次元最大加速度 Ca と最大速度 Cv。最大角加速度 = Ca*dtheta/T^2、最大角速度 = Cv*dtheta/T。変形台形(MT)なら Ca=4.888。",
+    "backlash_deg": 0.0,
+    "_backlash_note": "カムフォロワは停留部でカムリブに予圧されるため、原理的にバックラッシュがない（カタログ明記）。前版の backlash 故障モードはこの機構では成立しないので削除した。",
+    "efficiency": 0.85,
+    "input_drag_torque_Nm": 0.30,
+    "table_viscous_Nms_rad": 0.05,
+    "_friction_grade": "assumed",
+    "_friction_note": "効率・引きずりトルク・粘性の3つは出所が無い。入力軸のピーク負荷トルク 0.415Nm（psi=51.7deg のとき）に対し引きずり 0.30Nm は同じ桁で、結果への寄与は4割を超える。なお 0.76Nm はトルクの最大と速度の最大を掛けた値で、この2つは同時に起きない（トルク最大 psi=22.5deg / 速度最大 psi=90deg）ので過大。カタログの許容入力トルク表を当てるまでは仮置きで、記事でも仮定として書く。",
+    "allowable_inertia_kg_m2": null,
+    "_allowable_inertia_note": "素ユニットの許容負荷慣性はカタログの会員向け資料側にあり未確認。許容慣性は n*theta^2/t_index^2 に比例するので、割付を270degから180degに変えると許容値は (180/270)^2 = 0.44 倍に落ちる。ここは確認が要る。",
+    "_grade": "catalog",
+    "source": "割付180deg/停留180degは市販カム索引ユニットの標準割付の一つ。入力軸は連続回転し、停留はカム溝の形そのものが作るので、1サイクルごとの起動停止が無い"
+  },
+
+  "cycle": {
+    "tact_s": 3.0,
+    "index_time_s": 1.5,
+    "dwell_time_s": 1.5,
+    "table_omega_max_rad_s": 0.92132,
+    "table_alpha_max_rad_s2": 1.92964,
+    "tangential_accel_max_m_s2": 0.43417,
+    "_kinematics_note": "割付180deg/停留180deg なので index_time = dwell_time = tact/2。入力軸は 20rpm 一定（1タクトで1回転）。テーブル側の最大値は上の Ca/Cv と割出し角45deg=0.7854rad から出る。接線加速度 = 0.225 * alpha_max = 44mg で、満量ボトルの転倒しきい値 532mg に対し12倍の余裕がある。",
+    "_grade": "derived",
+    "source": "前版の台形速度＋サーボ整定という指令生成は無くなった。位置を決めるのはカムの形状で、プロファイルは選べない"
+  },
+
+  "drive": {
+    "type": "induction_gearmotor_with_inverter",
+    "output_rpm": 20.0,
+    "gear_ratio": 75.0,
+    "motor_rpm_at_operating_point": 1500.0,
+    "motor_rated_rpm_50hz": 1420.0,
+    "inverter_hz_at_operating_point": 50.1,
+    "motor_rated_output_W": 40.0,
+    "poles": 4,
+    "rated_current_A": 0.33,
+    "no_load_current_A": 0.22,
+    "torque_current_constant_Nm_per_A": 1.0,
+    "_current_model_note": "線電流の1次近似モデル。誘導モータの励磁電流(no_load_current_A)とトルク電流を直交合成する: I_line = sqrt(I_mag^2 + (T_motor / torque_current_constant)^2)。モータ軸トルクは T_motor = torque_input / gear_ratio。3相200V・効率0.55・力率0.65あたりを仮定した値で、データシートからではない(この drive ブロックの _grade は assumed)。運転点ではトルク電流が励磁電流の約2%しかないので、線電流はほぼ励磁電流で一定になり、カムのトルク要求はほとんど乗らない。しかもトルク電流が励磁電流よりずっと小さいと、線電流の変化はトルクに比例せず二乗に近く(倍周波・整流状)なる。この『電流はトルクの弱い観測量』自体が記事の題材。物理コア(twin.c)はこのキーを読まず、読み側/センサ層が torque_input から再構成する。",
+    "brake": "emergency_stop_only",
+    "_brake_note": "通常運転では入力軸を止めないので、サイクルごとのブレーキ動作は無い。ブレーキは非常停止と停電時の保持だけ。",
+    "_sizing_note": "テーブル軸のピークトルクは 1.43Nm、ピーク機械出力は 0.74W しかない。負荷トルクだけなら15Wでも足りる。40Wにしているのは起動トルクとユニット内部の摩擦、それとカタログの組合せ例に合わせたもので、負荷計算からは決まっていない。",
+    "_grade": "assumed",
+    "source": "出力20rpmを 1/75 で得るにはモータ1500rpmが要る。負荷が定格の3.7%しかないのですべりはほとんど乗らず、同期速度の近くで回る。50.1Hz（同期1503rpm）で1500rpmになる。定格すべりが乗る前提で53.6Hzとしていたのは誤りで、それだと1605rpm=タクト2.80sになる"
+  },
+
+  "control": {
+    "architecture": "open_loop_timing",
+    "_arch_note": "位置ループ・速度ループ・電流ループは存在しない。位置を決めるのはカムの形状で、制御系は関与しない。前版のカスケードサーボは全部削除した。",
+    "cam_home_sensor": "proximity_1ppr_on_input_shaft",
+    "plc_scan_ms": 5.0,
+    "plc_io": ["start", "cam_home", "bottle_present", "fill_valve", "estop"],
+    "inverter_control": "fixed_frequency",
+    "_grade": "derived",
+    "source": "入力軸のドグを近接センサで1回転1パルス拾い、そこからの経過時間で停留窓を判断して充填弁を開ける。PLCはビットI/Oだけでスキャンは5ms"
+  },
+
+  "fill": {
+    "target_volume_mL": 400.0,
+    "flow_rate_mL_s": 330.0,
+    "nozzle_diameter_mm": 14.0,
+    "nozzle_velocity_m_s": 2.144,
+    "valve_open_delay_s": 0.030,
+    "valve_close_delay_s": 0.030,
+    "start_delay_s": 0.05,
+    "_timing_note": "充填 400/330 = 1.212s、開始遅れ 50ms と弁の開閉遅れ 60ms を足して 1.322s。停留 1.5s に対し余裕 0.178s。前版は余裕50msで、これは弁の応答だけで消える値だった。",
+    "_grade": "derived",
+    "source": "胴の容積498mLに対し充填400mL、頭上空間は29mm。流量はピストン式充填機の実力値の範囲で、停留時間に余裕を持って収まる側から選んだ"
+  },
+
+  "sensors": {
+    "_status": "暫定。取り付け位置と荷重経路は未決で、機械側が固まってから決める。以下は前版からの持ち越しで、strain の軸寸法だけ現実的な値へ直した。",
+
+    "_note": "加速度センサを2つに分けた。揺れ(3.75Hz)と軸受の衝撃(3kHz)では必要なサンプリングが2桁違うので、1つのセンサで両方は見られない。これ自体が記事の要点になる。",
+
+    "_mount_note": "構造モデル(structure_model)が結果を支配する。grounded=架台が地面に固定された2次系、free=剛体として a=F/m。加速度センサがスロッシングを拾えるかは、この選択だけで70dB以上変わる。実機なしでは決められない部分なので、既定は安全側(grounded)に置き、解析では3通りとも回して差を示すこと。",
+
+    "accel_lf": {
+      "mount": "frame_column",
+      "azimuth_deg": 0.0,
+      "axes": ["tangential", "radial"],
+      "sample_rate_hz": 1000.0,
+      "range_g": 2.0,
+      "bits": 16,
+      "noise_density_ug_rthz": 100.0,
+      "bandwidth_hz": 200.0,
+      "dc_coupled": true,
+      "frame_equiv_mass_kg": 60.0,
+      "structure_freq_hz": 250.0,
+      "structure_damping": 0.03,
+      "structure_model": "grounded",
+      "source": "DC応答があるMEMS加速度センサ。スロッシング3.75Hzとアンバランスの回転同期成分を狙う。方位はノズルと同じ世界角0度の柱。等価質量と構造共振は架台の寸法から見積もった値（sensors/PARAMS_ADDED.md に導出）"
+    },
+
+    "accel_hf": {
+      "mount": "motor_bearing_housing",
+      "_mount_change_note": "テーブル軸受からモータ軸受へ移した。テーブルは3.125rpmで規格の適用範囲外だが、モータは1500rpmで回り続ける。",
+      "azimuth_deg": 0.0,
+      "axes": ["radial"],
+      "sample_rate_hz": 51200.0,
+      "range_g": 50.0,
+      "bits": 16,
+      "noise_density_ug_rthz": 30.0,
+      "bandwidth_hz": 10000.0,
+      "dc_coupled": false,
+      "highpass_hz": 2.0,
+      "frame_equiv_mass_kg": 25.0,
+      "structure_freq_hz": 1200.0,
+      "structure_damping": 0.04,
+      "structure_model": "grounded",
+      "source": "軸受監視用の圧電式（IEPE）。3kHzのリンギングを拾うには帯域も刻みも桁違いに要る。低周波側は交流結合で落ちるので、これでスロッシングは見えない"
+    },
+
+    "strain": {
+      "mount": "table_support_shaft",
+      "sample_rate_hz": 2000.0,
+      "range_ustrain": 500.0,
+      "bits": 24,
+      "noise_rms_ustrain": 0.5,
+      "bandwidth_hz": 500.0,
+      "gauge_factor": 2.0,
+      "arm_length_mm": 150.0,
+      "shaft_outer_diameter_mm": 60.0,
+      "shaft_inner_diameter_mm": 0.0,
+      "youngs_modulus_GPa": 193.0,
+      "gauge_angle_deg": 0.0,
+      "rotating_gauge": false,
+      "_shaft_change_note": "前版の外径45/内径39（肉厚3mm）は30kg超の回転体を支える軸として成立しない。φ60中実に変更した。ただしカム素ユニットではテーブルは出力フランジに直付けなので、この位置に軸があるかどうかも含めて取り付けは未決。",
+      "source": "ブリッジ+アンプで曲げひずみを測る。断面係数は軸寸法から再計算する（前版の Z=3899mm3 は旧寸法の値）"
+    },
+
+    "current": {
+      "sample_rate_hz": 2000.0,
+      "range_A": 20.0,
+      "bits": 12,
+      "noise_rms_A": 0.01,
+      "bandwidth_hz": 800.0,
+      "_change_note": "サーボアンプの電流モニタからインバータの出力電流モニタに変わる。見えるのはカムのトルク要求を映した誘導モータ電流で、基本周期は 1/3.0s = 0.333Hz とその高調波。",
+      "source": "インバータのアナログ出力を外部ADCで取る想定。連続ログ4000Hzから2:1で間引く"
+    }
+  },
+
+  "faults": {
+    "missing_bottle": {
+      "enabled": false,
+      "station": 3,
+      "_replaces": "fill_imbalance",
+      "source": "供給スターホイールの取りこぼしで、特定ホルダだけ空のまま回る。単ノズルなので特定ステーションだけ充填量が減ることは起きないが、ボトルが無ければ充填自体が飛ぶ。満量400gが丸ごと欠けるので、前版の30%不足(120g)より3.3倍大きいアンバランスになる。ホルダに固定されるので次数1の解析はそのまま使える"
+    },
+    "valve_close_delay": {
+      "enabled": false,
+      "extra_delay_s": 0.15,
+      "drip_volume_mL": 3.0,
+      "source": "液固着やパッキン劣化で充填弁の閉じが遅れる。全ボトルが等しく過充填になり、液垂れが割出し中のテーブル上に落ちる。実機で最も多い故障の一つ"
+    },
+    "cam_follower_wear": {
+      "enabled": false,
+      "clearance_deg": 0.05,
+      "impact_torque_Nm": 0.2,
+      "source": "カムフォロワの外輪摩耗で予圧が抜け、割出しの入り口と出口でカムリブとの間に微小な当たりが出る。バックラッシュの代わりにこちらを置いた"
+    },
+    "bearing_outer_race": {
+      "enabled": false,
+      "location": "motor_shaft",
+      "shaft_rpm": 1500.0,
+      "rotation_freq_hz": 25.0,
+      "defect_freq_ratio": 3.58,
+      "defect_freq_hz": 89.5,
+      "impulse_accel_m_s2": 2.0,
+      "ring_freq_hz": 3000.0,
+      "ring_damping": 0.05,
+      "_relocation_note": "前版はテーブル軸(最大7.5rpm、欠陥0.447Hz、1サイクル0.44回)に置いていた。ISO 10816/20816 の適用範囲(120rpm以上)の外で、包絡線解析の題材として弱かった。モータ側に移すと回転25Hz・外輪傷89.5Hzで規格の範囲内に入り、実機で軸受が壊れる場所とも一致する",
+      "source": "外輪傷の通過周波数は回転周波数の定数倍。玉数8・接触角0度相当の係数として3.58を置いた。衝撃が構造の共振を叩いて減衰振動になる"
+    }
+  },
+
+  "physics_todo": {
+    "_note": "5系統のレビューで出た物理の欠落。コア書き直しで入れる。params.json 側に持つ値が要るものだけここに置き、実装後に正式なブロックへ移す。",
+    "vertical_load_path": true,
+    "coriolis": true,
+    "variable_mass_momentum": true,
+    "star_wheel_transfer_impact": true
+  },
+
+  "viz": {
+    "_note": "記事は GIF アニメを主役にする。同じ1回のシミュレーションから、複数のカメラで同時に描く。",
+    "frame_rate_hz": 30.0,
+    "cameras": [
+      {"name": "top",       "desc": "真上。8ステーションの割出しと工程配置が一目で分かる。供給315/充填0/排出225の関係を見せる基本図"},
+      {"name": "iso",       "desc": "斜め上45度。機械全体の姿。カム入力軸が回りっぱなしなのにテーブルが間欠で動くことを見せる"},
+      {"name": "nozzle",    "desc": "充填ステーションの寄り。ノズルから液が入り、液面が上がっていく"},
+      {"name": "bottle_xs", "desc": "1本のボトルの断面。液面の傾きだけを描く。割出し中に傾き、停留に入っても揺れ続けるのが主役"},
+      {"name": "cam",       "desc": "カム入力軸の角度とテーブル角の関係。入力180degで割出し、残り180degは停留という対応を線図と機械で同時に見せる"},
+      {"name": "sensors",   "desc": "波形パネル。上の絵と時刻を合わせて、加速度・ひずみ・電流が同時に走る"}
+    ],
+    "_grade": "derived",
+    "source": "実機が無いことを逆手に取り、実機では見えない断面や内部量を同じ時刻で並べる。これが仮想ツインの利点そのもの"
+  },
+
+  "sim": {
+    "dt_s": 2.5e-5,
+    "_dt_note": "2.0e-5 だと 1/(4000*dt)=12.5 が 13 に丸まって実効ログ 3846Hz になり、全スペクトルが4%ずれる。2.5e-5 なら 10 分割でちょうど 4000Hz。",
+    "log_rate_hz": 4000.0,
+    "_log_rate_note": "連続量（テーブル角、液面、反力、電流）はこの刻みで十分。軸受やカムフォロワの衝撃はここに乗せず、発生時刻と振幅のイベント列として別に出し、センサ層が各センサの刻みで波形に合成する。こうしないと 3kHz のリンギングが折り返す。",
+    "frame_rate_hz": 30.0,
+    "gravity_m_s2": 9.80665
+  }
+}

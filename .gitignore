@@ -1,0 +1,31 @@
+.venv/
+__pycache__/
+*.pyc
+*.o
+*.so
+*.bin
+*.events
+core/filler
+core/test_twin
+figs/
+frames/
+.pytest_cache/
+
+# 社内用・非公開。実在メーカー名・型式・URL・特許番号を含むので公開リポには載せない。
+# 冒頭に「社内用・非公開」と書いてあっても、それはコメントでしかない。ここで機械的に落とす。
+MARKET_SURVEY.md
+REVIEW_MECH.md
+REVIEW_FUNCTION.md
+REVIEW_PHYSICS.md
+REVIEW_SUMMARY.md
+REVIEW_EXT1.md
+REVIEW_EXT2.md
+# 作業用。事故の経緯や未修正の欠陥一覧が載るので、公開の可否は個別に判断する。
+MACHINE_BUILD_REF.md
+KAIZO_PLAN.md
+RESUME.md
+viz/FIX_PLAN.md
+viz/REVIEW_BRIEF.md
+# 記事の下書き・骨組み（社内用）。公開リポには載せない。
+ARTICLE_OUTLINE.md
+DRAFT.md
