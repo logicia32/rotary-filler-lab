@@ -250,7 +250,9 @@ def main():
         bottle_n = bottle_png(tmp, params, 0.0, "flat")
 
         zenn = build_zenn(motion_z, bottles_a_z, bottle_n, ya_z, yn_z)
-        info_z = ss.write_gif(zenn, os.path.join(FIGS, "hook_zenn.gif"), fps=FPS_Z)
+        # Zenn のデプロイ上限は 1 ファイル 3 MB。ここは Zenn 向けなので必ずその下に収める。
+        info_z = ss.write_gif(zenn, os.path.join(FIGS, "hook_zenn.gif"), fps=FPS_Z,
+                              max_mb=2.8)
 
         # -- LinkedIn assets (fail-first: abnormal block, then normal block)
         motion_l = subsample(motion_all, N_L)
