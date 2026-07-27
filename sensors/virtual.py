@@ -425,8 +425,24 @@ def build_truth(dump: Dump, params: dict) -> Truth:
         ang = np.full_like(dump.th_t, gauge)
         notes.append("ひずみゲージは静止側（軸受箱・支持部）に貼った前提。感度方向は世界固定")
     # 感度方向は「センサ方位からの角度」。半径方向を 0 deg とする。
-    F_gauge = F_r * np.cos(ang) + F_t * np.sin(ang)
-    strain = (F_gauge * L_arm / Z) / E * 1e6   # ustrain
+    az_gauge = np.deg2rad(float(params["sensors"]["accel_lf"].get("azimuth_deg", 0.0)))
+    # (1) 水平反力による曲げ。力をゲージ方位へ射影して仮の腕を掛ける。
+    M_horiz = (F_r * np.cos(ang) + F_t * np.sin(ang)) * L_arm
+    # (2) 垂直偏荷重による曲げ。MODEL.md 6 節のとおり、これが支持部の曲げの主成分で
+    #     水平反力の 30 倍以上あり、テーブル角に同期して回る（静止ゲージには次数 1 で出る）。
+    #     欠品はこの経路に直接乗るので、入れないとひずみは欠品にほぼ盲目になる。
+    #     m_bend_x/y はコアが出す世界座標の偏り方向成分（C↔Python 一致を検証済み）。
+    #     センサ方位へ回してゲージ方位へ射影する。面上の引張方向＝偏り方向なので、
+    #     偏り成分をそのまま射影してよい（物理モーメントは 90 度回した量・MODEL.md 6.1）。
+    if hasattr(dump, "m_bend_x"):
+        m_r = dump.m_bend_x * np.cos(az_gauge) + dump.m_bend_y * np.sin(az_gauge)
+        m_t = -dump.m_bend_x * np.sin(az_gauge) + dump.m_bend_y * np.cos(az_gauge)
+        M_vert = m_r * np.cos(ang) + m_t * np.sin(ang)
+        notes.append("ひずみは垂直偏荷重の曲げ（m_bend・支持部の主成分）と水平反力の曲げの和")
+    else:
+        M_vert = np.zeros_like(M_horiz)
+        notes.append("この版は m_bend 列が無いので、ひずみは水平反力の曲げのみ（主成分が抜ける）")
+    strain = ((M_horiz + M_vert) / Z) / E * 1e6   # ustrain
 
     if hasattr(dump, "torque_slosh"):              # 004
         T_slosh = dump.torque_slosh.copy()
