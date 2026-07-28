@@ -21,13 +21,13 @@
 コードから使うとき:
 
 ```python
-from sensors.read_dump import read_dump
+from sensors.read_dump import load_run
 from sensors import virtual
 
-dump   = read_dump("core/out.bin")
+dump, events = load_run("core/out.bin")              # 連続ログ RFILL004 ＋ イベント列 RFEVT002
 params, added = virtual.load_params("params.json")   # 足りない定数は既定値で補う
-events = virtual.bearing_events(dump, params)        # 衝撃のイベント列
-chans, truth = virtual.synthesize(dump, params, seed=20260722, impacts=events)
+impacts = virtual.bearing_events(events, params)     # イベント列から軸受の衝撃を作る
+chans, truth = virtual.synthesize(dump, params, seed=20260722, impacts=impacts)
 
 ch = chans["strain"]
 ch.t, ch.y          # センサ出力（時刻とデータ）
@@ -44,7 +44,7 @@ ch.info             # 各段が何をしたかの記録（LSB、間引き比、�
 |---|---|
 | `chain.py` | 連鎖の部品。段ごとに単体で試験できる形にしてある |
 | `virtual.py` | 真値の合成（反力 → 各センサの物理量）と、連鎖を通した出力 |
-| `read_dump.py` | 物理コアのバイナリ読み込み（版 001 / 002） |
+| `read_dump.py` | 物理コアのバイナリ読み込み（版 004 現行は `load_run`。旧 001 / 002 も） |
 | `demo.py` | 図を出す。物理コアを回すところからやる |
 | `test_chain.py` | 連鎖の検証。外部データに依存しない |
 | `PARAMS_ADDED.md` | `params.json` に無くて、こちらで既定値を置いた定数と、その根拠 |
@@ -58,7 +58,7 @@ ch.info             # 各段が何をしたかの記録（LSB、間引き比、�
  → 帯域制限               2 次バターワース低域通過（bandwidth_hz）
  → サンプリング            ログ周波数からセンサのサンプリングへ
  → ノイズ加算              白色ガウス。種で再現できる
- → 量子化                 LSB = range / 2^bits
+ → 量子化                 LSB = full_scale / 2^bits（full_scale = 2×range の両振り）
  → レンジ飽和              ±range で頭打ち
 ```
 
@@ -104,16 +104,13 @@ ch.info             # 各段が何をしたかの記録（LSB、間引き比、�
 そこから各センサの帯域制限と間引きを通す。だから低速センサでは正しく落ち、
 高速センサでは正しく残る。
 
-**物理コアはまだイベント列を別に出していない。** `core/FORMAT.md` には
-連続ログの `a_bear`（index 9）しか無く、そこは折り返している（FORMAT.md 2.5 の注意書き）。
-そこで `bearing_events()` が、FORMAT.md 2.5 に書かれた発生規則
-「テーブル角が `2*pi / bearing_defect_ratio` 進むごとに 1 回」から時刻を再生成する。
-ログの `a_bear` の立ち上がりと突き合わせて、同じ時刻になることは確認した。
-コアがイベント列を出すようになったら、`bearing_events()` を差し替えるだけでよい。
+**現行（rev.3）の物理コアはイベント列を別ファイル（`<out>.events` / RFEVT002）に出す。**
+`load_run()` が連続ログとイベント列をまとめて読み、`bearing_events(events, params)` が
+その中の軸受衝撃（kind=0）を取り出す。旧版はコアがイベント列を出さず、`bearing_events()`
+がテーブル角の発生規則から時刻を再生成していたが、いまはコアの出力をそのまま使う。
 
-バックラッシュのほうは `backlash_events()` が `T_bl` の立ち上がりから拾う
-（FORMAT.md 2.6 が「イベント検出にだけ使うこと」と書いているとおりの使い方）。
-加速度への注入はしていない。トルクから架台の加速度への腕の長さが決まらないため。
+カムフォロワ当たり（旧バックラッシュ相当）は `cam_events()` がイベント列から拾う。
+どちらも加速度への注入はしていない。トルクから架台の加速度への腕の長さが決まらないため。
 
 ## 読む側の注意
 

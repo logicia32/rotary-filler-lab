@@ -73,14 +73,14 @@ ADDED_DEFAULTS = {
         },
         "strain": {
             "arm_length_mm": 150.0,
-            "shaft_outer_diameter_mm": 45.0,
-            "shaft_inner_diameter_mm": 39.0,
+            "shaft_outer_diameter_mm": 60.0,   # params.json は φ60 中実（旧 φ45/内39 は強度不足）
+            "shaft_inner_diameter_mm": 0.0,
             "youngs_modulus_GPa": 193.0,
             "gauge_angle_deg": 0.0,
             "rotating_gauge": False,
         },
         "current": {
-            "bandwidth_hz": 1500.0,
+            "bandwidth_hz": 800.0,             # params.json に合わせる（旧 1500）
         },
     }
 }

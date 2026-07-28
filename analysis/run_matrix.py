@@ -450,6 +450,9 @@ def long_average(workdir, filler, params, ana, conds=("normal", "missing"),
                                       channels=("strain",))
         ch = case.channels["strain"]
         segs = dataset.segments(case, skip, ana["segment"]["base_revolutions"])
+        if not segs:
+            out[name] = {"error": "区間が作れない（--duration が立ち上げ捨て＋1 回転より短い）"}
+            continue
         n_rev = len(segs)
         seg1 = segs[0]
         fs_truth = 1.0 / float(np.median(np.diff(ch.truth_t)))

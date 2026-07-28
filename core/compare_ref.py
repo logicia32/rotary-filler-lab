@@ -330,12 +330,15 @@ def main() -> int:
     path = os.path.join(HERE, ".cmp.bin")
     n_cycles = 2
     enable_faults = False
+    allow_no_events = False
     i = 0
     while i < len(args):
         if args[i] == "--cycles" and i + 1 < len(args):
             n_cycles = int(args[i + 1]); i += 2
         elif args[i] == "--faults":
             enable_faults = True; i += 1
+        elif args[i] == "--no-events-ok":
+            allow_no_events = True; i += 1
         else:
             path = args[i]; i += 1
 
@@ -388,8 +391,13 @@ def main() -> int:
         ev = read_events(ev_path)
         compare_events(ev, result.events, rep)
         rep.show(f"イベント列（C {len(ev)} 件 / 参照 {len(result.events)} 件）")
+    elif allow_no_events:
+        print(f"\n（イベント列 {os.path.basename(ev_path)} が無いが、--no-events-ok 指定なので比べない）")
     else:
-        print(f"\n（イベント列 {os.path.basename(ev_path)} が無いので、そちらは比べていない）")
+        rep.check("イベント列サイドカーの有無（要 --events）", 1.0, 0.0, "")
+        print(f"\nNG: イベント列 {os.path.basename(ev_path)} が無い。C を --events 付きで回すこと。"
+              "イベントの時刻・符号・振幅が未検証のまま素通りするのを防ぐ"
+              "（連続量だけで良ければ --no-events-ok）")
 
     for w in result.warnings:
         print(f"参照側の警告: {w}")

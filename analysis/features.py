@@ -165,7 +165,7 @@ def angle_resample(theta, y, samples_per_rev: int, n_rev: int,
         "max_dtheta_in_source_rad": float(np.max(np.diff(thk))) if len(thk) > 1 else 0.0,
     }
     # 元の角度の刻みが格子の刻みより粗いと、補間ではなく引き伸ばしになる
-    info["oversampled"] = info["max_dtheta_in_source_rad"] < dtheta
+    info["oversampled"] = info["max_dtheta_in_source_rad"] > dtheta
     return AngleSignal(theta=grid, y=yg, samples_per_rev=int(samples_per_rev),
                        n_rev=int(n_rev), info=info)
 
