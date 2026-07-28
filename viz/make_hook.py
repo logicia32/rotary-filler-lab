@@ -193,7 +193,7 @@ def build_zenn(motion, bottles_a, bottle_n, ya_deg, yn_deg):
         pill(d, (892, 72, 1276, 100), CAP["hdr_nrm"], ss.CORRECT)
         paste_fit(cv, bottles_a[i], (500, 104, 884, 664))
         paste_fit(cv, bottle_n, (892, 104, 1276, 664))
-        frames.append(ss.badge(np.asarray(cv), 1, corner="tr"))   # uniform: top-right
+        frames.append(np.asarray(cv))   # no series badge on the in-article hook (removed 2026-07-28)
     return frames
 
 
@@ -265,12 +265,12 @@ def main():
 
         hold = 3
         square = abn + [abn[-1]] * hold + nrm + [nrm[-1]] * hold  # FAIL FIRST
-        # uniform badge: top-right on every variant
-        li_1x1 = [ss.badge(f, 1, corner="tr") for f in square]
+        # no series badge on the hook variants either (removed 2026-07-28)
+        li_1x1 = list(square)
         info_1 = ss.write_gif(li_1x1, os.path.join(FIGS, "hook_li_1x1.gif"), fps=FPS_L)
 
-        # 4:5 pads the square top/bottom; badge stays top-right (in the top letterbox)
-        li_4x5 = [ss.badge(ss.reframe(f, "4:5"), 1, corner="tr") for f in square]
+        # 4:5 pads the square top/bottom; no badge
+        li_4x5 = [ss.reframe(f, "4:5") for f in square]
         info_4 = ss.write_gif(li_4x5, os.path.join(FIGS, "hook_li_4x5.gif"), fps=FPS_L)
 
     print("\nwrote:")
