@@ -127,7 +127,7 @@ def build_cam(p, N=54):
                  ha="center", fontsize=9, color=COR)
         for s in ("top", "right"):
             axB.spines[s].set_visible(False)
-        frames.append(ss.badge(fig_to_array(fig), 1, corner="tr"))
+        frames.append(fig_to_array(fig))
         plt.close(fig)
     return frames
 
@@ -221,7 +221,7 @@ def build_resonance(p, frames_per_cycle=10, n_cycles=6):
             axS.spines[s].set_visible(False)
         fig.text(0.02, 0.95, "止まるたびに、拍子が合う左のほうが大きく揺れていく",
                  fontsize=12, color=INK)
-        frames.append(ss.badge(fig_to_array(fig), 1, corner="tr"))
+        frames.append(fig_to_array(fig))
         plt.close(fig)
     return ss.boomerang(frames)
 
@@ -271,7 +271,7 @@ def build_alias(p, N=48):
                 ax.spines[s].set_visible(False)
         fig.text(0.07, 0.955, "速い振動を、遅い読み取りで見ると", fontsize=12,
                  color=INK)
-        frames.append(ss.badge(fig_to_array(fig), 1, corner="tr"))
+        frames.append(fig_to_array(fig))
         plt.close(fig)
     return ss.boomerang(frames)
 
